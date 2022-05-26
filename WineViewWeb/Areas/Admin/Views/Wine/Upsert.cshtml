@@ -1,0 +1,187 @@
+﻿@using WineView.Utility
+@model WineView.Models.ViewModels.WineVM
+
+<form method="post" asp-action="Upsert" enctype="multipart/form-data">
+    <input asp-for="Wine.Id" hidden />
+    <input asp-for="Wine.ImageUrl" hidden />
+    <div class="row">
+        <div class="col-10">
+            <div class="border p-3 mt-4 row">
+                <div class="col-12 pb-2">
+                    <h2 class="text-primary">@(Model.Wine.Id != 0 ? "Update": "Create") Wine</h2>
+                    <hr />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Wine.Name"></label>
+                    <input asp-for="Wine.Name" class="form-control" />
+                    <span asp-validation-for="Wine.Name" class="text-danger"></span>
+                </div>
+                <div class="mb-3 col-6">
+                    <label asp-for="Wine.Price"></label>(Lei)
+                    <input asp-for="Wine.Price" class="form-control" />
+                    <span asp-validation-for="Wine.Price" class="text-danger"></span>
+                </div>
+                <div class="mb-3 col-6">
+                    <label asp-for="Wine.Price5"></label>(Lei)
+                    <input asp-for="Wine.Price5" class="form-control" />
+                    <span asp-validation-for="Wine.Price5" class="text-danger"></span>
+                </div>
+                <div class="mb-3 col-6">
+                    <label asp-for="Wine.Price10"></label>(Lei)
+                    <input asp-for="Wine.Price10" class="form-control" />
+                    <span asp-validation-for="Wine.Price10" class="text-danger"></span>
+                </div>
+                <div class="mb-3 col-6">
+                    <label asp-for="Wine.ImageUrl"></label>
+                    <input type="file" id="uploadBox" name="file" class="form-control" />
+                </div>
+                <div class="mb-3 col-6">
+                    <label asp-for="Wine.ColorId"></label>
+                    <select asp-for="Wine.ColorId" asp-items="@Model.ColorList" class="form-select">
+                        <option disabled selected>--Select Color--</option>
+                    </select>
+                    <span asp-validation-for="Wine.ColorId" class="text-danger"></span>
+                </div>
+                <div class="mb-3 col-6">
+                    <label asp-for="Wine.StyleId"></label>
+                    <select asp-for="Wine.StyleId" asp-items="@Model.StyleList" class="form-select">
+                        <option disabled selected>--Select Style--</option>
+                    </select>
+                    <span asp-validation-for="Wine.StyleId" class="text-danger"></span>
+                </div>
+                <div class="mb-3 col-6">
+                    <label asp-for="Wine.WineryId"></label>
+                    <select asp-for="Wine.WineryId" asp-items="@Model.WineryList" class="form-select">
+                        <option disabled selected>--Select Winery--</option>
+                    </select>
+                    <span asp-validation-for="Wine.WineryId" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3 col-6">
+                    <label asp-for="Wine.Grapes"></label>
+                    <table>
+                        @foreach (var grape in Model.GrapeList)
+                        {
+                            <tr>
+                                <td>
+                                    <input id="@grape.Value" type="checkbox" name="grapes" value="@grape.Value" checked="@grape.Selected" />
+                                </td>
+                                <td>
+                                    <label for="@grape.Value">@grape.Text</label>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+
+                <div class="mb-3 col-12">
+                    <label asp-for="Wine.Volume"></label>(ML)
+                    <input asp-for="Wine.Volume" class="form-control" />
+                    <span asp-validation-for="Wine.Volume" class="text-danger"></span>
+                </div>
+                @if (User.IsInRole(SD.Role_Admin))
+                {
+                    <div class="mb-3 col-6">
+                        <label>Is in Clasifier?</label><br />
+                        <label>Yes</label>
+                        @Html.RadioButtonFor(m => m.Wine.IsInClasifier, "true", new {id = "input_Clasifier_True"})
+                        <label>No</label>
+                        @Html.RadioButtonFor(m => m.Wine.IsInClasifier, "false", new{id = "input_Clasifier_False", Checked = "checked"})
+                    </div>
+
+                    <div class="mb-3 col-6" id="Input_ClasifierId" style="display:none;">
+                        <label asp-for="Wine.ClasifierId"></label>
+                    <input asp-for="Wine.ClasifierId" class="form-control" />
+                    <span asp-validation-for="Wine.ClasifierId" class="text-danger"></span>
+                    @Html.ValidationMessage("CustomError", new { @class = "text-danger" })
+                    </div>
+                }
+
+                <div class="col-12">
+                    @if (Model.Wine.Id != 0)
+                    {
+                        <button type="submit" onclick="return ValidateInput2()" class="btn btn-primary" style="width:150px">Update</button>
+                    }
+                    else
+                    {
+                        <button type="submit" onclick="return ValidateInput()" class="btn btn-primary" style="width:150px">Create</button>
+
+                    }
+                    <a asp-controller="Wine" asp-action="Index" class="btn btn-secondary" style="width:150px">
+                        Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-2 pd-4">
+            <br />
+            <img src="@Model.Wine.ImageUrl"
+                 width="100%" style="border-radius:5px; border:1px solid #bbb9b9" />
+        </div>
+    </div>
+</form>
+
+@section Scripts{
+    @{
+        <partial name="_ValidationScriptsPartial" />
+    }
+    <script>
+        $(document).ready(function() {
+            $('#input_Clasifier_True').change(function() {
+                $('#Input_ClasifierId').show();
+            })
+            $('#input_Clasifier_False').change(function() {
+                $('#Input_ClasifierId').hide();
+            })
+        })
+        function ValidateInput() {
+            if (document.getElementById("uploadBox").value == "") {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Please upload an Image!',
+                });
+                return false;
+            }
+            var ok = false;
+        @foreach (var grape in Model.GrapeList)
+        {
+            <text>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                if (document.getElementById(@grape.Value).checked == true) {
+                    ok = true;
+                }
+            </text>
+        }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        if (ok == false) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Please select a Grape!',
+                });
+                return false;
+            }
+
+            return true;
+        }
+        function ValidateInput2() {
+            var ok = false;
+        @foreach (var grape in Model.GrapeList)
+        {
+            <text>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            if (document.getElementById(@grape.Value).checked == true) {
+                    ok = true;
+                }
+            </text>
+        }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                        if (ok == false) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Please select a Grape!',
+                });
+                return false;
+            }
+            return true;
+        }
+    </script>
+}

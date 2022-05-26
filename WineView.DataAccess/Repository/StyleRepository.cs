@@ -1,0 +1,25 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using WineView.DataAccess.Repository.IRepository;
+using WineView.Models;
+
+namespace WineView.DataAccess.Repository
+{
+    public class StyleRepository : Repository<Style>, IStyleRepository
+    {
+        private ApplicationDbContext _db;
+
+        public StyleRepository(ApplicationDbContext db) : base(db)
+        {
+            _db = db;
+        }
+
+        public void Update(Style obj)
+        {
+            _db.Styles.Update(obj);
+        }
+    }
+}
